@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import ConversorTextoAVoz from './components/ConversorTextoAVoz';
 import ConversorVozATexto from './components/ConversorVozATexto';
@@ -13,16 +13,47 @@ function App() {
   const cambiarUsuario = (evento) => setUsuario(evento.target.value);
   const cambiarClave = (evento) => setClave(evento.target.value);
 
-  const Ingresar = () => {
-    if (usuario === 'admin' && clave === 'admin') {
-      alert('Ingresaste');
-      setLogueado(true);
-    } else {
-      alert('Usuario o clave incorrectos');
+  // Función para manejar el inicio de sesión
+  async function Ingresar() {
+    try {
+      const peticion = await fetch(`http://localhost:3000/login?usuario=${usuario}&clave=${clave}`, {
+        method: 'GET',
+        credentials: 'include',  // Enviar las credenciales en la solicitud
+      });
+      if (peticion.ok) {
+        setLogueado(true);  // Si el login es exitoso, actualizar el estado de logueado
+      } else {
+        alert('Datos incorrectos');
+      }
+    } catch (error) {
+      console.error('Error de conexión:', error);
     }
-  };
+  }
+
+  // Función para validar la sesión al cargar la página
+  async function validarSesion() {
+    try {
+      const peticion = await fetch('http://localhost:3000/validar', {
+        method: 'GET',
+        credentials: 'include',  // Enviar las credenciales en la solicitud
+      });
+      if (peticion.ok) {
+        setLogueado(true);  // Si la sesión es válida, mantener el estado de logueado
+      } else {
+        setLogueado(false);  // Si no es válida, asegurarse de que no esté logueado
+      }
+    } catch (error) {
+      console.error('Error de validación de sesión:', error);
+    }
+  }
+
+  useEffect(() => {
+    // Validamos la sesión al cargar el componente
+    validarSesion();
+  }, []);
 
   const cambiarTexto = (evento) => setTextoAVoz(evento.target.value);
+
   const convertirTextoAVoz = () => {
     const synth = window.speechSynthesis;
     const utterThis = new SpeechSynthesisUtterance(textoAVoz);
@@ -65,7 +96,6 @@ function App() {
 }
 
 export default App;
-
 
 
 
